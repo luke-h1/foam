@@ -1,5 +1,5 @@
 name: vChat! - Chat for Twitch
-pulledAt: 2026-11-18
+pulledAt: 2026-11-26
 country: us
 stores:
   app-store:
@@ -30,44 +30,110 @@ stores:
       CHAT
       Third-party emotes, badges, repl…
     ranks:
-      - keyword: twitch app
+      - keyword: emote chat for streams
+        rank: 2
+        popularity: 20
+        trend: stable
+      - keyword: twitch chat client
+        rank: 2
+        popularity: 20
+        trend: stable
+      - keyword: emote chat for twitch
+        rank: 2
+        popularity: 20
+        trend: stable
+      - keyword: chat for twitch viewers
+        rank: 2
+        popularity: 20
+        trend: stable
+      - keyword: twitch emote viewer
+        rank: 2
+        popularity: 20
+        trend: stable
+      - keyword: twitch chat with emotes
+        rank: 2
+        popularity: 20
+        trend: stable
+      - keyword: chat app for twitch emotes
+        rank: 2
+        popularity: 20
+        trend: stable
+      - keyword: twitch emotes for chat
+        rank: 2
+        popularity: 20
+        trend: stable
+      - keyword: see animated emotes twitch
+        rank: 2
+        popularity: 20
+        trend: stable
+      - keyword: find twitch emotes for chat
+        rank: 2
+        popularity: 20
+        trend: stable
+      - keyword: streams chat emotes
         rank: 3
         popularity: 20
+        trend: stable
+      - keyword: twitch emote chat app
+        rank: 3
+        popularity: 20
+        trend: stable
+      - keyword: stream chat with custom emotes
+        rank: 3
+        popularity: 20
+        trend: stable
       - keyword: foam streams chat emotes
         rank: 4
         popularity: 20
-      - keyword: streams chat emotes
-        rank: 6
+        trend: stable
+      - keyword: twitch chat with badges
+        rank: 4
         popularity: 20
+        trend: stable
+      - keyword: chat emotes
+        rank: 5
+        popularity: 20
+        trend: stable
       - keyword: twitch emotes
         rank: 7
         popularity: 20
         trend: declining
-      - keyword: twitch chat
+      - keyword: twitch chat overlay
         rank: 7
         popularity: 20
-      - keyword: chat emotes
+        trend: stable
+      - keyword: twitch chat app
+        rank: 7
+        popularity: 20
+        trend: stable
+      - keyword: twitch chat alternative
+        rank: 7
+        popularity: 20
+        trend: stable
+      - keyword: use emotes in chat
+        rank: 7
+        popularity: 20
+        trend: stable
+      - keyword: twitch app
         rank: 8
         popularity: 20
-      - keyword: foam streams
-        rank: 9
+        trend: stable
+      - keyword: twitch chat
+        rank: 8
         popularity: 20
+        trend: stable
       - keyword: foam streams chat
-        rank: 9
+        rank: 10
         popularity: 20
-      - keyword: twitch chat app
-        rank: 14
+        trend: stable
+      - keyword: animated emotes in chat
+        rank: 10
         popularity: 20
-      - keyword: twitch stream
-        rank: 17
-        popularity: 20
-      - keyword: twitch
-        rank: 20
-        popularity: 20
+        trend: stable
     yourTargets:
       - keyword: twitch emotes
         rank: 7
       - keyword: twitch chat
-        rank: 7
+        rank: 8
       - keyword: twitch
         rank: 20

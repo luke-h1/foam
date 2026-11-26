@@ -62,3 +62,79 @@ baseline:
       bttv: null
       twitch emotes: null
       live stream: null
+checks:
+  - at: 2026-11-26T06:15:10.797Z
+    day: 7
+    ranks:
+      us:
+        twitch: null
+        twitch chat: 12
+        7tv: null
+        seventv: null
+        bttv: null
+        betterttv: 6
+        frankerfacez: 18
+        twitch emotes: 11
+        live stream: null
+        streamer: null
+      gb:
+        twitch: null
+        twitch chat: null
+        7tv: null
+        seventv: null
+        bttv: null
+        twitch emotes: null
+        live stream: null
+    improved:
+      - country: us
+        keyword: frankerfacez
+        before: 21
+        after: 18
+      - country: us
+        keyword: twitch emotes
+        before: 36
+        after: 11
+    dropped: []
+    regressions: []
+    verdict: won
+    metrics:
+      source: Appeeky (store analytics, Search Ads, RevenueCat), Appeeky AI Visibility, Category charts in the repo, Reviews in the repo
+      before:
+        from: 2026-11-11
+        to: 2026-11-18
+        days: 7
+        values:
+          page_views: 0.7142857142857143
+          downloads: 0.14285714285714285
+          proceeds: 0
+          trials: 0
+          ad_installs: 0
+          ai_visibility: 0.11
+        currency: GBP
+      after:
+        from: 2026-11-19
+        to: 2026-11-26
+        days: 7
+        values:
+          page_views: 0.5714285714285714
+          downloads: 0.14285714285714285
+          proceeds: 0
+          trials: 0
+          ai_visibility: 0.1545
+      changes:
+        - metric: page_views
+          before: 0.7142857142857143
+          after: 0.5714285714285714
+          change: -0.20000000000000007
+          outcome: worse
+        - metric: downloads
+          before: 0.14285714285714285
+          after: 0.14285714285714285
+          change: 0
+          outcome: flat
+          noise: 1.134
+        - metric: ai_visibility
+          before: 0.11
+          after: 0.1545
+          change: 0.40454545454545454
+          outcome: better

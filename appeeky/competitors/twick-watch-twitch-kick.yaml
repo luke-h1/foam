@@ -1,13 +1,13 @@
 name: "Twick: Watch Twitch & Kick"
-pulledAt: 2026-11-18
+pulledAt: 2026-11-26
 country: us
 stores:
   app-store:
     id: "6755964690"
     title: "Twick: Watch Twitch & Kick"
     developer: SHUBHAM SHAH
-    rating: 4.62
-    ratings: 55
+    rating: 4.63
+    ratings: 56
     version: 2.2.5
     updated: 2026-11-15
     releaseNotes: |-
@@ -26,31 +26,97 @@ stores:
       • Combined channels – Pair a streamer's Twitch and Kick streams and read both chats together.
       • Cha…
     ranks:
-      - keyword: twitch chat app
+      - keyword: twitch emote chat app
+        rank: 2
+        popularity: 20
+        trend: stable
+      - keyword: foam streams chat emotes
         rank: 5
         popularity: 20
-      - keyword: foam streams chat emotes
+        trend: stable
+      - keyword: twitch chat with emotes
+        rank: 5
+        popularity: 20
+        trend: stable
+      - keyword: chat app for twitch emotes
+        rank: 5
+        popularity: 20
+        trend: stable
+      - keyword: 7tv emote app
         rank: 6
         popularity: 20
-      - keyword: kick
+        trend: stable
+      - keyword: emote chat for twitch
         rank: 6
         popularity: 20
-      - keyword: foam streams
+        trend: stable
+      - keyword: twitch chat client
         rank: 7
         popularity: 20
+        trend: stable
+      - keyword: stream chat with custom emotes
+        rank: 7
+        popularity: 20
+        trend: stable
+      - keyword: twitch emotes for chat
+        rank: 7
+        popularity: 20
+        trend: stable
+      - keyword: kick
+        rank: 7
+        popularity: 20
+        trend: stable
+      - keyword: watch streams with chat
+        rank: 8
+        popularity: 20
+        trend: stable
       - keyword: foam streams chat
+        rank: 9
+        popularity: 20
+        trend: stable
+      - keyword: twitch chat overlay
         rank: 10
         popularity: 20
-      - keyword: streams chat emotes
-        rank: 14
+        trend: stable
+      - keyword: see animated emotes twitch
+        rank: 10
         popularity: 20
+        trend: stable
+      - keyword: find twitch emotes for chat
+        rank: 10
+        popularity: 20
+        trend: stable
       - keyword: twitch emotes
-        rank: 15
-        popularity: 25
+        rank: 11
+        popularity: 20
         trend: improving
+      - keyword: streams chat emotes
+        rank: 11
+        popularity: 20
+        trend: stable
+      - keyword: mobile twitch chat
+        rank: 13
+        popularity: 20
+        trend: stable
+      - keyword: twitch chat alternative
+        rank: 13
+        popularity: 20
+        trend: stable
+      - keyword: emote chat for streams
+        rank: 13
+        popularity: 20
+        trend: stable
+      - keyword: chat for twitch viewers
+        rank: 15
+        popularity: 20
+        trend: stable
+      - keyword: twitch emote viewer
+        rank: 16
+        popularity: 20
+        trend: stable
     yourTargets:
       - keyword: twitch emotes
-        rank: 15
+        rank: 11
     recentReviews:
       count: 14
       average: 4
