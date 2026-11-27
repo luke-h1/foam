@@ -1,5 +1,5 @@
 name: Frosty for Twitch
-pulledAt: 2026-11-26
+pulledAt: 2026-11-27
 country: us
 stores:
   app-store:
@@ -7,7 +7,7 @@ stores:
     title: Frosty for Twitch
     developer: Tommy Chow
     rating: 4.63
-    ratings: 2575
+    ratings: 2577
     version: 5.2.0
     updated: 2026-08-17
     releaseNotes: See full release notes at https://github.com/tommyxchow/frosty/releases
@@ -27,27 +27,11 @@ stores:
       • Theater and fullscreen mode
       • Wa…
     ranks:
-      - keyword: twitch emotes
-        rank: 1
-        popularity: 20
-        trend: improving
       - keyword: emote chat for streams
         rank: 1
         popularity: 20
         trend: stable
-      - keyword: twitch chat client
-        rank: 1
-        popularity: 20
-        trend: stable
-      - keyword: twitch chat alternative
-        rank: 1
-        popularity: 20
-        trend: stable
-      - keyword: 7tv emote app
-        rank: 1
-        popularity: 20
-        trend: stable
-      - keyword: twitch emote chat app
+      - keyword: twitch emotes for chat
         rank: 1
         popularity: 20
         trend: stable
@@ -55,19 +39,19 @@ stores:
         rank: 1
         popularity: 20
         trend: stable
-      - keyword: twitch chat with badges
-        rank: 1
-        popularity: 20
-        trend: stable
       - keyword: chat for twitch viewers
         rank: 1
         popularity: 20
         trend: stable
-      - keyword: twitch emote viewer
+      - keyword: 7tv emote app
         rank: 1
         popularity: 20
         trend: stable
-      - keyword: twitch chat overlay
+      - keyword: chat app for twitch emotes
+        rank: 1
+        popularity: 20
+        trend: stable
+      - keyword: twitch emote chat app
         rank: 1
         popularity: 20
         trend: stable
@@ -79,11 +63,35 @@ stores:
         rank: 1
         popularity: 20
         trend: stable
-      - keyword: chat app for twitch emotes
+      - keyword: find twitch emotes for chat
         rank: 1
         popularity: 20
         trend: stable
-      - keyword: twitch emotes for chat
+      - keyword: animated emotes in chat
+        rank: 1
+        popularity: 20
+        trend: improving
+      - keyword: twitch emotes
+        rank: 1
+        popularity: 20
+        trend: improving
+      - keyword: twitch chat client
+        rank: 1
+        popularity: 20
+        trend: stable
+      - keyword: twitch chat alternative
+        rank: 1
+        popularity: 20
+        trend: stable
+      - keyword: twitch chat with badges
+        rank: 1
+        popularity: 20
+        trend: stable
+      - keyword: twitch emote viewer
+        rank: 1
+        popularity: 20
+        trend: stable
+      - keyword: twitch chat overlay
         rank: 1
         popularity: 20
         trend: stable
@@ -91,11 +99,15 @@ stores:
         rank: 1
         popularity: 20
         trend: stable
-      - keyword: find twitch emotes for chat
-        rank: 1
+      - keyword: foam streams chat
+        rank: 2
         popularity: 20
         trend: stable
-      - keyword: foam streams chat
+      - keyword: twitch chat
+        rank: 2
+        popularity: 20
+        trend: stable
+      - keyword: twitch chat app
         rank: 2
         popularity: 20
         trend: stable
@@ -108,18 +120,6 @@ stores:
         popularity: 20
         trend: stable
       - keyword: twitch app
-        rank: 2
-        popularity: 20
-        trend: stable
-      - keyword: twitch chat
-        rank: 2
-        popularity: 20
-        trend: stable
-      - keyword: twitch chat app
-        rank: 2
-        popularity: 20
-        trend: stable
-      - keyword: animated emotes in chat
         rank: 2
         popularity: 20
         trend: stable
