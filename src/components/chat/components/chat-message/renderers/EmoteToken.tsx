@@ -8,6 +8,7 @@ import { calculateAspectRatio } from '@app/utils/chat/calculateAspectRatio';
 import { getChatEmoteDisplayUrl } from '@app/utils/emote/getChatEmoteDisplayUrl';
 import { logger } from '@app/utils/logger';
 
+import { styles as chatRowStyles } from '../ChatRow.styles';
 import { ChatInlineImage } from './ChatInlineImage';
 
 interface EmoteTokenProps {
@@ -112,6 +113,7 @@ export const EmoteToken = memo(
             targetSize={targetSize}
           />
         ))}
+        {isModerated ? <View style={chatRowStyles.moderatedTokenStrike} /> : null}
       </View>
     );
   },

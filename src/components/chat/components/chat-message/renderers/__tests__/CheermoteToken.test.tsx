@@ -141,7 +141,7 @@ describe('CheermoteToken', () => {
     );
 
     expect(screen.getByTestId('cheermote-container')).toHaveStyle({
-      opacity: 0.4,
+      opacity: 0.72,
     });
   });
 });

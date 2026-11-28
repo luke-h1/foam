@@ -72,24 +72,34 @@ export function useStreamPlayerSource({
     [clip, channelName, video, embedParent, autoplay, initialMuted, webViewKey],
   );
 
-  const injectedJavaScriptBeforeContentLoaded = clip
-    ? buildTwitchAuthHelperScript()
-    : buildTwitchPlayerQualityDefaultScript({
-        defaultQuality: '720p60',
-        maxBitrateBps: 3_500_000,
-      }) +
-      '\n' +
-      buildTwitchPlayerAudioDefaultScript({ muted: initialMuted });
+  const injectedJavaScriptBeforeContentLoaded = useMemo(
+    () =>
+      clip
+        ? buildTwitchAuthHelperScript()
+        : buildTwitchPlayerQualityDefaultScript({
+            defaultQuality: '720p60',
+            maxBitrateBps: 3_500_000,
+          }) +
+          '\n' +
+          buildTwitchPlayerAudioDefaultScript({ muted: initialMuted }),
+    [clip, initialMuted],
+  );
+
+  const injectedJavaScript = useMemo(
+    () =>
+      buildStreamPlayerInjectedJavaScript({
+        autoplay,
+        clip,
+        initialMuted,
+        showOverlayControls,
+        video,
+      }),
+    [autoplay, clip, initialMuted, showOverlayControls, video],
+  );
 
   return {
     contentKind,
-    injectedJavaScript: buildStreamPlayerInjectedJavaScript({
-      autoplay,
-      clip,
-      initialMuted,
-      showOverlayControls,
-      video,
-    }),
+    injectedJavaScript,
     injectedJavaScriptBeforeContentLoaded,
     webViewSource,
   };

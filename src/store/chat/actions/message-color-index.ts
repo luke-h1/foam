@@ -23,7 +23,6 @@ export const indexMessageColor = (message: AnyChatMessageType): void => {
 
   const senderKeys = [
     normaliseIndexKey(message.sender),
-    normaliseIndexKey(message.userstate?.username),
     normaliseIndexKey(message.userstate?.login),
     normaliseIndexKey(message.userstate?.['display-name']),
   ];

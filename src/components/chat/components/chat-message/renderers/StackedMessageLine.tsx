@@ -62,13 +62,7 @@ export function StackedMessageLine({
   });
 
   return (
-    <View
-      style={[
-        styles.messageLine,
-        isModerated ? styles.messageLineModerated : null,
-      ]}
-    >
-      {isModerated ? <View style={styles.moderatedStrikeOverlay} /> : null}
+    <View style={styles.messageLine}>
       {showTimestamp && timestamp ? (
         <ChatRowText
           style={getChatRowTextStyle('tabular', textStyles.timestamp)}
